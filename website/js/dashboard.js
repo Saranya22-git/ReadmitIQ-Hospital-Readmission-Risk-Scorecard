@@ -4,6 +4,7 @@ const D = MODEL_DATA;
 const C = {
   red: '#e05c5c', amber: '#f0a443', green: '#3fb950',
   blue: '#58a6ff', purple: '#a371f7', muted: '#8b949e',
+  cyan: '#22d3ee', cyanSoft: 'rgba(34,211,238,0.55)',
   bg3: '#1c232e', border: '#2a3441', text: '#e6edf3'
 };
 Chart.defaults.color = C.muted;
@@ -57,9 +58,10 @@ new Chart(document.getElementById('deptChart'), {
     datasets: [{
       label: 'Readmission %',
       data: depts.map(d => d.rate),
-      backgroundColor: depts.map(d =>
-        d.rate > 40 ? C.red : d.rate > 30 ? C.amber : C.blue
-      ),
+      backgroundColor: C.cyanSoft,
+      hoverBackgroundColor: C.cyan,
+      borderColor: C.cyan,
+      borderWidth: 1.5,
       borderRadius: 5,
       borderSkipped: false
     }]
