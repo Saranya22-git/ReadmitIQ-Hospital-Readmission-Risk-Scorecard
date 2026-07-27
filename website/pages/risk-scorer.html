@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Risk Scorer — ReadmitIQ</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="../js/model_data.js"></script>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="11" y="2" width="6" height="24" rx="2" fill="#e05c5c"/>
+        <rect x="2" y="11" width="24" height="6" rx="2" fill="#e05c5c"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">ReadmitIQ</div>
+      <div class="brand-sub">Risk Intelligence</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="../index.html" class="nav-item" data-page="overview"><span class="nav-icon">◎</span> Overview</a></li>
+    <li><a href="risk-scorer.html" class="nav-item active" data-page="scorer"><span class="nav-icon">◈</span> Risk Scorer</a></li>
+    <li><a href="model-insights.html" class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Model Insights</a></li>
+    <li><a href="patient-data.html" class="nav-item" data-page="data"><span class="nav-icon">▦</span> Patient Data</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="model-badge">XGBoost + SMOTE</div>
+    <div class="sidebar-meta">AUC · <strong>0.9554</strong></div>
+  </div>
+</nav>
+
+<main class="main">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Patient Risk Scorer</h1>
+      <p class="page-sub">Enter patient discharge data to generate a 30-day readmission risk score</p>
+    </div>
+  </header>
+
+  <div class="scorer-layout">
+    <!-- FORM -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Patient Details</h2>
+        <span class="card-tag">Discharge Data</span>
+      </div>
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          <input type="number" id="f_age" class="form-input" min="18" max="90" value="65" placeholder="e.g. 65"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select id="f_gender" class="form-select">
+            <option value="0">Female</option>
+            <option value="1">Male</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Length of Stay (days)</label>
+          <input type="number" id="f_los" class="form-input" min="1" max="30" value="5"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Prior Admissions (12 mo)</label>
+          <input type="number" id="f_prev" class="form-input" min="0" max="10" value="2"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Number of Diagnoses</label>
+          <input type="number" id="f_diag" class="form-input" min="1" max="15" value="4"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Number of Procedures</label>
+          <input type="number" id="f_proc" class="form-input" min="0" max="10" value="2"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Medications at Discharge</label>
+          <input type="number" id="f_meds" class="form-input" min="1" max="25" value="8"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Discharge Disposition</label>
+          <select id="f_discharge" class="form-select">
+            <option value="0">AMA (Against Medical Advice)</option>
+            <option value="1" selected>Home</option>
+            <option value="2">Home Health</option>
+            <option value="3">Rehab</option>
+            <option value="4">SNF (Skilled Nursing)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Insurance Type</label>
+          <select id="f_insurance" class="form-select">
+            <option value="0">Medicaid</option>
+            <option value="1" selected>Medicare</option>
+            <option value="2">Private</option>
+            <option value="3">Self-Pay</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <select id="f_dept" class="form-select">
+            <option value="0">Cardiology</option>
+            <option value="1" selected>General Medicine</option>
+            <option value="2">Neurology</option>
+            <option value="3">Orthopedics</option>
+            <option value="4">Pulmonology</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">Comorbidities</label>
+          <div class="toggle-row">
+            <label class="toggle-item"><input type="checkbox" id="f_dm"> Diabetes</label>
+            <label class="toggle-item"><input type="checkbox" id="f_htn" checked> Hypertension</label>
+            <label class="toggle-item"><input type="checkbox" id="f_chf"> Heart Failure (CHF)</label>
+            <label class="toggle-item"><input type="checkbox" id="f_copd"> COPD</label>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <button class="btn-score" onclick="scorePatient()">Calculate Risk Score</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div class="card result-panel" id="resultPanel">
+      <div class="card-header">
+        <h2 class="card-title">Risk Assessment</h2>
+        <span class="card-tag" id="resultTag">Awaiting input</span>
+      </div>
+      <div id="resultBody">
+        <div class="result-placeholder">
+          <div class="icon">◈</div>
+          <p>Fill in patient details and click<br><strong>Calculate Risk Score</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ── Logistic approximation using top SHAP features ── */
+/* We replicate the model's decision surface in JS using the exported
+   feature importances and training-derived coefficients. */
+
+const WEIGHTS = {
+  age:                0.031,
+  num_medications:    0.055,
+  length_of_stay:    -0.048,
+  num_prev_admissions: 0.095,
+  num_diagnoses:      0.062,
+  discharge_disposition: 0.0,   // handled via offset below
+  heart_failure:      0.38,
+  copd:               0.28,
+  diabetes:           0.22,
+  hypertension:       0.18,
+  gender:             0.06,
+  num_procedures:     0.025,
+  insurance_type:     0.0,      // handled via offset
+  department:         0.0
+};
+
+const DISCHARGE_OFFSET = { 0: 0.85, 1: 0.0, 2: 0.1, 3: -0.05, 4: 0.2 };
+const INSURANCE_OFFSET = { 0: 0.15, 1: 0.0, 2: -0.05, 3: 0.32 };
+const INTERCEPT = -3.6;
+
+function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+
+function scorePatient() {
+  const age   = +document.getElementById('f_age').value;
+  const los   = +document.getElementById('f_los').value;
+  const prev  = +document.getElementById('f_prev').value;
+  const diag  = +document.getElementById('f_diag').value;
+  const proc  = +document.getElementById('f_proc').value;
+  const meds  = +document.getElementById('f_meds').value;
+  const gender= +document.getElementById('f_gender').value;
+  const disc  = +document.getElementById('f_discharge').value;
+  const ins   = +document.getElementById('f_insurance').value;
+  const dm    = document.getElementById('f_dm').checked ? 1 : 0;
+  const htn   = document.getElementById('f_htn').checked ? 1 : 0;
+  const chf   = document.getElementById('f_chf').checked ? 1 : 0;
+  const copd  = document.getElementById('f_copd').checked ? 1 : 0;
+
+  const logit =
+    INTERCEPT +
+    WEIGHTS.age * age +
+    WEIGHTS.num_medications * meds +
+    WEIGHTS.length_of_stay * los +
+    WEIGHTS.num_prev_admissions * prev +
+    WEIGHTS.num_diagnoses * diag +
+    WEIGHTS.heart_failure * chf +
+    WEIGHTS.copd * copd +
+    WEIGHTS.diabetes * dm +
+    WEIGHTS.hypertension * htn +
+    WEIGHTS.gender * gender +
+    WEIGHTS.num_procedures * proc +
+    (DISCHARGE_OFFSET[disc] || 0) +
+    (INSURANCE_OFFSET[ins] || 0);
+
+  const prob = sigmoid(logit);
+  const pct  = Math.round(prob * 100);
+  const tier = pct >= 60 ? 'High' : pct >= 30 ? 'Medium' : 'Low';
+  const tierCls = { High:'tier-high', Medium:'tier-medium', Low:'tier-low' }[tier];
+  const barCls  = { High:'bar-red', Medium:'bar-amber', Low:'bar-green' }[tier];
+
+  // Key factors
+  const factors = [
+    { name:'Prior Admissions',     val: prev,  weight: prev * WEIGHTS.num_prev_admissions },
+    { name:'Age',                  val: age,   weight: age  * WEIGHTS.age },
+    { name:'Medications',          val: meds,  weight: meds * WEIGHTS.num_medications },
+    { name:'Diagnoses',            val: diag,  weight: diag * WEIGHTS.num_diagnoses },
+    { name:'Heart Failure (CHF)',  val: chf,   weight: chf  * WEIGHTS.heart_failure },
+    { name:'COPD',                 val: copd,  weight: copd * WEIGHTS.copd },
+    { name:'Diabetes',             val: dm,    weight: dm   * WEIGHTS.diabetes },
+    { name:'Hypertension',         val: htn,   weight: htn  * WEIGHTS.hypertension },
+    { name:'Length of Stay',       val: los,   weight: Math.abs(los * WEIGHTS.length_of_stay) },
+  ]
+  .filter(f => f.val > 0)
+  .sort((a,b) => b.weight - a.weight)
+  .slice(0, 5);
+
+  const levelColor = { High:'#e05c5c', Medium:'#f0a443', Low:'#3fb950' };
+
+  document.getElementById('resultTag').textContent = tier + ' Risk';
+  document.getElementById('resultBody').innerHTML = `
+    <div class="risk-meter-wrap">
+      <div class="risk-score-num" style="color:${levelColor[tier]}">${pct}%</div>
+      <div style="margin-top:8px; color:#8b949e; font-size:0.82rem;">30-day readmission probability</div>
+      <div class="risk-bar-track">
+        <div class="risk-bar-fill ${barCls}" style="width:${pct}%"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#8b949e; margin-bottom:16px;">
+        <span>0%</span><span>30% · Medium</span><span>60% · High</span><span>100%</span>
+      </div>
+      <span class="risk-tier-badge ${tierCls}">${tier} Risk</span>
+    </div>
+
+    <div class="factor-list">
+      <div class="factor-list-title">Top Contributing Risk Factors</div>
+      ${factors.map(f => `
+        <div class="factor-item">
+          <div class="factor-dot" style="background:${levelColor[tier]}"></div>
+          <div class="factor-name">${f.name}</div>
+          <div class="factor-level" style="color:${levelColor[tier]}">${typeof f.val === 'number' && f.val <= 1 && f.val > 0 ? 'Present' : f.val}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="margin-top:20px; padding:14px; background:#1c232e; border-radius:8px; border:1px solid #2a3441;">
+      <div style="font-size:0.72rem; color:#8b949e; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px;">Clinical Note</div>
+      <div style="font-size:0.82rem; color:#e6edf3; line-height:1.6;">
+        ${tier === 'High'
+          ? 'This patient is at <strong>elevated risk</strong>. Consider scheduling a 48-hour post-discharge follow-up call, medication reconciliation review, and care coordination referral.'
+          : tier === 'Medium'
+          ? 'This patient shows <strong>moderate risk factors</strong>. A 7-day post-discharge phone check-in is recommended. Monitor for signs of decompensation.'
+          : 'This patient is at <strong>low readmission risk</strong>. Standard discharge instructions and 30-day follow-up appointment are appropriate.'}
+      </div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

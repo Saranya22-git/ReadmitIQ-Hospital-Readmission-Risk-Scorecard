@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hospital Readmission Risk Scorecard</title>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="js/chart.umd.min.js"></script>
+<script src="js/model_data.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR NAV -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="11" y="2" width="6" height="24" rx="2" fill="#e05c5c"/>
+        <rect x="2" y="11" width="24" height="6" rx="2" fill="#e05c5c"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">ReadmitIQ</div>
+      <div class="brand-sub">Risk Intelligence</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html" class="nav-item active" data-page="overview">
+      <span class="nav-icon">◎</span> Overview
+    </a></li>
+    <li><a href="pages/risk-scorer.html" class="nav-item" data-page="scorer">
+      <span class="nav-icon">◈</span> Risk Scorer
+    </a></li>
+    <li><a href="pages/eda.html" class="nav-item" data-page="eda"><span class="nav-icon">◉</span> EDA
+    </a></li>
+    <li><a href="pages/model-insights.html" class="nav-item" data-page="insights">
+      <span class="nav-icon">◇</span> Model Insights
+    </a></li>
+    <li><a href="pages/model-comparison.html" class="nav-item" data-page="comparison"><span class="nav-icon">⊞</span> Model Comparison
+    </a></li>
+    <li><a href="pages/patient-data.html" class="nav-item" data-page="data">
+      <span class="nav-icon">▦</span> Patient Data
+    </a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="model-badge">XGBoost + SMOTE</div>
+    <div class="sidebar-meta">AUC · <strong>0.9554</strong></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard Overview</h1>
+      <p class="page-sub">30-day readmission risk across 5,000 patient records</p>
+    </div>
+    <div class="header-badge">
+      <span class="pulse-dot"></span> Model Active
+    </div>
+  </header>
+
+  <!-- KPI ROW -->
+  <section class="kpi-row" id="kpiRow"></section>
+
+  <!-- CHARTS GRID -->
+  <div class="charts-grid">
+
+    <div class="card chart-card">
+      <div class="card-header">
+        <h2 class="card-title">Risk Tier Distribution</h2>
+        <span class="card-tag">All Patients</span>
+      </div>
+      <div class="chart-wrap"><canvas id="tierChart"></canvas></div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-header">
+        <h2 class="card-title">Department Readmission Rate</h2>
+        <span class="card-tag">% Readmitted</span>
+      </div>
+      <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+    </div>
+
+    <div class="card chart-card wide">
+      <div class="card-header">
+        <h2 class="card-title">ROC Curve</h2>
+        <span class="card-tag">AUC = 0.9554</span>
+      </div>
+      <div class="chart-wrap"><canvas id="rocChart"></canvas></div>
+    </div>
+
+    <div class="card chart-card wide">
+      <div class="card-header">
+        <h2 class="card-title">Top Readmission Risk Factors</h2>
+        <span class="card-tag">SHAP Feature Importance</span>
+      </div>
+      <div class="chart-wrap"><canvas id="fiChart"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- CONFUSION MATRIX -->
+  <div class="card cm-card">
+    <div class="card-header">
+      <h2 class="card-title">Confusion Matrix</h2>
+      <span class="card-tag">Test Set · 1,000 patients</span>
+    </div>
+    <div class="cm-wrap" id="cmWrap"></div>
+  </div>
+
+</main>
+
+<script src="js/dashboard.js"></script>
+</body>
+</html>

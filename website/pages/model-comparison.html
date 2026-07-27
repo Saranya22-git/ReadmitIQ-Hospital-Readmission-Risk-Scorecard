@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Model Comparison — ReadmitIQ</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="../js/chart.umd.min.js"></script>
+<script src="../js/model_data.js"></script>
+<script src="../js/comparison_data.js"></script>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="11" y="2" width="6" height="24" rx="2" fill="#e05c5c"/><rect x="2" y="11" width="24" height="6" rx="2" fill="#e05c5c"/></svg></div>
+    <div><div class="brand-name">ReadmitIQ</div><div class="brand-sub">Risk Intelligence</div></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="../index.html" class="nav-item"><span class="nav-icon">◎</span> Overview</a></li>
+    <li><a href="risk-scorer.html" class="nav-item"><span class="nav-icon">◈</span> Risk Scorer</a></li>
+    <li><a href="eda.html" class="nav-item"><span class="nav-icon">◉</span> EDA</a></li>
+    <li><a href="model-insights.html" class="nav-item"><span class="nav-icon">◇</span> Model Insights</a></li>
+    <li><a href="model-comparison.html" class="nav-item active"><span class="nav-icon">⊞</span> Model Comparison</a></li>
+    <li><a href="patient-data.html" class="nav-item"><span class="nav-icon">▦</span> Patient Data</a></li>
+  </ul>
+  <div class="sidebar-footer"><div class="model-badge">XGBoost + SMOTE</div><div class="sidebar-meta">AUC · <strong>0.9554</strong></div></div>
+</nav>
+<main class="main">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Model Comparison</h1>
+      <p class="page-sub">Logistic Regression vs Random Forest vs XGBoost — trained on same SMOTE-balanced data</p>
+    </div>
+  </header>
+  <div id="winnerBanner" style="margin-bottom:24px;"></div>
+  <div id="modelCards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;"></div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h2 class="card-title">Full Metrics Comparison</h2><span class="card-tag">Test Set · 1,000 patients</span></div>
+    <table class="metrics-table">
+      <thead><tr><th>Model</th><th>AUC-ROC</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1 Score</th><th>Winner</th></tr></thead>
+      <tbody id="compTableBody"></tbody>
+    </table>
+  </div>
+  <div class="charts-grid" style="margin-bottom:20px;">
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">AUC-ROC Comparison</h2><span class="card-tag">Higher is Better</span></div>
+      <div class="chart-wrap"><canvas id="aucChart"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">All Metrics Radar</h2><span class="card-tag">Normalized 0–100</span></div>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card chart-card" style="margin-bottom:20px;">
+    <div class="card-header"><h2 class="card-title">ROC Curves — All Models</h2><span class="card-tag">True Positive Rate vs False Positive Rate</span></div>
+    <div class="chart-wrap" style="height:320px;"><canvas id="rocAll"></canvas></div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h2 class="card-title">Why XGBoost Was Selected</h2><span class="card-tag">Model Selection Rationale</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:4px;">
+      <div style="padding:18px;background:#1c232e;border-radius:8px;border:1px solid #2a3441;"><div style="font-size:1.3rem;margin-bottom:8px;">⚡</div><div style="font-size:0.78rem;color:#8b949e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Gradient Boosting</div><div style="font-size:0.84rem;line-height:1.7;color:#e6edf3;">XGBoost builds trees sequentially, each correcting errors of the last. This reduces both bias and variance better than a single tree or bagging approach.</div></div>
+      <div style="padding:18px;background:#1c232e;border-radius:8px;border:1px solid #2a3441;"><div style="font-size:1.3rem;margin-bottom:8px;">🏥</div><div style="font-size:0.78rem;color:#8b949e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Handles Mixed Data</div><div style="font-size:0.84rem;line-height:1.7;color:#e6edf3;">Medical datasets mix binary flags (CHF, COPD), continuous values (age, LOS), and categorical features — XGBoost handles all natively without scaling.</div></div>
+      <div style="padding:18px;background:#1c232e;border-radius:8px;border:1px solid #2a3441;"><div style="font-size:1.3rem;margin-bottom:8px;">🔍</div><div style="font-size:0.78rem;color:#8b949e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">SHAP Compatible</div><div style="font-size:0.84rem;line-height:1.7;color:#e6edf3;">Tree-based SHAP runs in exact O(TLD) time on XGBoost models — giving per-patient explainability that clinicians and regulators require.</div></div>
+    </div>
+  </div>
+</main>
+<script>
+const CD=COMPARISON_DATA,models=CD.models;
+Chart.defaults.color='#8b949e';Chart.defaults.borderColor='#2a3441';
+const COLORS={'Logistic Regression':'#58a6ff','Random Forest':'#3fb950','XGBoost':'#e05c5c'};
+const CA=['#58a6ff','#3fb950','#e05c5c'];
+const bestAUC=Math.max(...models.map(m=>m.auc));
+const winner=models.reduce((a,b)=>a.auc>b.auc?a:b);
+document.getElementById('winnerBanner').innerHTML=`<div style="background:rgba(224,92,92,0.1);border:1px solid rgba(224,92,92,0.3);border-radius:10px;padding:18px 24px;display:flex;align-items:center;gap:16px;"><div style="font-size:2rem;">🏆</div><div><div style="font-size:0.72rem;color:#8b949e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Best Performing Model</div><div style="font-size:1.1rem;font-weight:700;color:#e05c5c;">${winner.model}</div><div style="font-size:0.82rem;color:#8b949e;margin-top:2px;">AUC-ROC ${winner.auc} · Accuracy ${winner.accuracy}% · F1 ${winner.f1}%</div></div></div>`;
+document.getElementById('modelCards').innerHTML=models.map(m=>{
+  const isBest=m.auc===bestAUC,col=COLORS[m.model];
+  return `<div class="card" style="border-color:${isBest?'#e05c5c':'#2a3441'};position:relative;">${isBest?`<div style="position:absolute;top:12px;right:12px;font-size:0.68rem;background:#e05c5c;color:white;padding:2px 8px;border-radius:10px;font-weight:600;">BEST</div>`:''}<div style="font-size:0.72rem;color:#8b949e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">${m.model}</div><div style="font-size:2.2rem;font-weight:800;color:${col};font-family:monospace;line-height:1;">${m.auc}</div><div style="font-size:0.72rem;color:#8b949e;margin-bottom:16px;">AUC-ROC</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${[['Accuracy',m.accuracy+'%'],['Precision',m.precision+'%'],['Recall',m.recall+'%'],['F1',m.f1+'%']].map(([l,v])=>`<div style="background:#1c232e;padding:8px 10px;border-radius:6px;"><div style="font-size:0.68rem;color:#8b949e;margin-bottom:2px;">${l}</div><div style="font-size:0.92rem;font-weight:600;color:#e6edf3;font-family:monospace;">${v}</div></div>`).join('')}</div></div>`;
+}).join('');
+const mC=['auc','accuracy','precision','recall','f1'];
+const bV={};mC.forEach(k=>bV[k]=Math.max(...models.map(m=>parseFloat(m[k]))));
+document.getElementById('compTableBody').innerHTML=models.map(m=>{
+  const isBest=m.auc===bestAUC,col=COLORS[m.model];
+  return `<tr><td style="font-weight:600;color:${col};">${m.model}</td>${mC.map(k=>{const v=m[k],isB=parseFloat(v)===bV[k];return`<td style="font-family:monospace;color:${isB?col:'#e6edf3'};font-weight:${isB?700:400};">${typeof v==='number'&&v<10?v:v+'%'}</td>`;}).join('')}<td>${isBest?`<span style="background:rgba(224,92,92,0.15);color:#e05c5c;padding:2px 10px;border-radius:10px;font-size:0.75rem;border:1px solid #e05c5c;">✓ Selected</span>`:'—'}</td></tr>`;
+}).join('');
+new Chart(document.getElementById('aucChart'),{type:'bar',data:{labels:models.map(m=>m.model),datasets:[{data:models.map(m=>m.auc),backgroundColor:CA,borderRadius:6,borderSkipped:false,barThickness:50}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#2a3441'},min:0.88,max:0.97,ticks:{callback:v=>v.toFixed(2)}}},maintainAspectRatio:false}});
+new Chart(document.getElementById('radarChart'),{type:'radar',data:{labels:['AUC (x100)','Accuracy','Precision','Recall','F1'],datasets:models.map((m,i)=>({label:m.model,data:[m.auc*100,m.accuracy,m.precision,m.recall,m.f1],borderColor:CA[i],backgroundColor:CA[i].replace('ff','22'),borderWidth:2,pointBackgroundColor:CA[i]}))},options:{scales:{r:{grid:{color:'#2a3441'},angleLines:{color:'#2a3441'},pointLabels:{color:'#8b949e',font:{size:11}},ticks:{display:false},min:80}},plugins:{legend:{position:'bottom',labels:{padding:16,boxWidth:12}}},maintainAspectRatio:false}});
+const rocs=CD.roc_curves;
+new Chart(document.getElementById('rocAll'),{type:'line',data:{datasets:[...models.map((m,i)=>({label:`${m.model} (AUC=${m.auc})`,data:rocs[m.model].fpr.map((x,j)=>({x,y:rocs[m.model].tpr[j]})),borderColor:CA[i],backgroundColor:'transparent',tension:0.3,pointRadius:0,borderWidth:2.5})),{label:'Random Baseline',data:[{x:0,y:0},{x:1,y:1}],borderColor:'#8b949e',borderDash:[5,5],pointRadius:0,borderWidth:1.5,backgroundColor:'transparent'}]},options:{parsing:false,plugins:{legend:{position:'bottom',labels:{padding:16,boxWidth:14}}},scales:{x:{type:'linear',min:0,max:1,title:{display:true,text:'False Positive Rate',color:'#8b949e'},grid:{color:'#2a3441'}},y:{min:0,max:1,title:{display:true,text:'True Positive Rate',color:'#8b949e'},grid:{color:'#2a3441'}}},maintainAspectRatio:false}});
+</script>
+</body>
+</html>

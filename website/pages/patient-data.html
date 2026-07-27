@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Patient Data — ReadmitIQ</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="../js/model_data.js"></script>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="11" y="2" width="6" height="24" rx="2" fill="#e05c5c"/>
+        <rect x="2" y="11" width="24" height="6" rx="2" fill="#e05c5c"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">ReadmitIQ</div>
+      <div class="brand-sub">Risk Intelligence</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="../index.html" class="nav-item"><span class="nav-icon">◎</span> Overview</a></li>
+    <li><a href="risk-scorer.html" class="nav-item"><span class="nav-icon">◈</span> Risk Scorer</a></li>
+    <li><a href="eda.html" class="nav-item"><span class="nav-icon">◉</span> EDA</a></li>
+    <li><a href="model-insights.html" class="nav-item"><span class="nav-icon">◇</span> Model Insights</a></li>
+    <li><a href="model-comparison.html" class="nav-item"><span class="nav-icon">⊞</span> Model Comparison</a></li>
+    <li><a href="patient-data.html" class="nav-item active"><span class="nav-icon">▦</span> Patient Data</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="model-badge">XGBoost + SMOTE</div>
+    <div class="sidebar-meta">AUC · <strong>0.9554</strong></div>
+  </div>
+</nav>
+
+<main class="main">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Patient Data</h1>
+      <p class="page-sub">Cohort of 5,000 synthetic discharge records with risk tier classification</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="table-controls">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search by department, insurance, discharge..."/>
+      <select class="filter-select" id="tierFilter">
+        <option value="">All Risk Tiers</option>
+        <option value="High">High Risk</option>
+        <option value="Medium">Medium Risk</option>
+        <option value="Low">Low Risk</option>
+      </select>
+      <select class="filter-select" id="deptFilter">
+        <option value="">All Departments</option>
+        <option>Cardiology</option>
+        <option>General Medicine</option>
+        <option>Pulmonology</option>
+        <option>Orthopedics</option>
+        <option>Neurology</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Department</th>
+            <th>LOS</th>
+            <th>Prev Admit</th>
+            <th>Diagnoses</th>
+            <th>Meds</th>
+            <th>CHF</th>
+            <th>COPD</th>
+            <th>DM</th>
+            <th>Insurance</th>
+            <th>Discharge</th>
+            <th>Readmitted</th>
+            <th>Risk Tier</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button class="page-btn" id="prevBtn" onclick="changePage(-1)">← Prev</button>
+      <span id="pageInfo"></span>
+      <button class="page-btn" id="nextBtn" onclick="changePage(1)">Next →</button>
+      <span style="margin-left:12px;" id="totalInfo"></span>
+    </div>
+  </div>
+</main>
+
+<script>
+// Generate synthetic patient rows in JS using the same distributions
+const DEPTS    = ['Cardiology','General Medicine','Pulmonology','Orthopedics','Neurology'];
+const DISCS    = ['AMA','Home','Home Health','Rehab','SNF'];
+const INS      = ['Medicaid','Medicare','Private','Self-Pay'];
+const GENDERS  = ['Female','Male'];
+
+function seededRand(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function riskTier(prob) {
+  return prob >= 0.6 ? 'High' : prob >= 0.3 ? 'Medium' : 'Low';
+}
+
+const rand = seededRand(42);
+const patients = [];
+for (let i = 0; i < 5000; i++) {
+  const age    = Math.floor(rand() * 72 + 18);
+  const gender = GENDERS[rand() > 0.5 ? 1 : 0];
+  const los    = Math.floor(rand() * 29 + 1);
+  const prev   = Math.floor(rand() * 10);
+  const diag   = Math.floor(rand() * 14 + 1);
+  const meds   = Math.floor(rand() * 24 + 1);
+  const chf    = rand() > 0.75 ? 1 : 0;
+  const copd   = rand() > 0.80 ? 1 : 0;
+  const dm     = rand() > 0.60 ? 1 : 0;
+  const disc   = DISCS[Math.floor(rand() * DISCS.length)];
+  const ins    = INS[Math.floor(rand() * INS.length)];
+  const dept   = DEPTS[Math.floor(rand() * DEPTS.length)];
+
+  // Approx probability
+  const logit = -3.6 + 0.031*age + 0.055*meds - 0.048*los +
+    0.095*prev + 0.062*diag + 0.38*chf + 0.28*copd + 0.22*dm +
+    (disc==='AMA'?0.85:disc==='SNF'?0.2:0) +
+    (ins==='Self-Pay'?0.32:0);
+  const prob = 1/(1+Math.exp(-logit));
+  const readmitted = prob > 0.5 ? 'Yes' : 'No';
+
+  patients.push({ id:i+1, age, gender, dept, los, prev, diag, meds,
+    chf, copd, dm, ins, disc, readmitted, tier: riskTier(prob) });
+}
+
+let filtered = [...patients];
+let page = 1;
+const PAGE_SIZE = 25;
+
+function applyFilters() {
+  const q    = document.getElementById('searchInput').value.toLowerCase();
+  const tier = document.getElementById('tierFilter').value;
+  const dept = document.getElementById('deptFilter').value;
+  filtered = patients.filter(p => {
+    const matchQ    = !q || [p.dept,p.ins,p.disc,p.gender].some(v => v.toLowerCase().includes(q));
+    const matchTier = !tier || p.tier === tier;
+    const matchDept = !dept || p.dept === dept;
+    return matchQ && matchTier && matchDept;
+  });
+  page = 1;
+  render();
+}
+
+function changePage(dir) {
+  const maxPage = Math.ceil(filtered.length / PAGE_SIZE);
+  page = Math.max(1, Math.min(maxPage, page + dir));
+  render();
+}
+
+function render() {
+  const start = (page-1)*PAGE_SIZE;
+  const rows  = filtered.slice(start, start+PAGE_SIZE);
+  const tierBadge = t =>
+    t==='High'   ? `<span class="badge-high">High</span>` :
+    t==='Medium' ? `<span class="badge-medium">Medium</span>` :
+                   `<span class="badge-low">Low</span>`;
+  const yn = v => v ? '✓' : '—';
+
+  document.getElementById('tableBody').innerHTML = rows.map(p => `
+    <tr>
+      <td style="color:#8b949e; font-family:monospace;">${String(p.id).padStart(4,'0')}</td>
+      <td>${p.age}</td>
+      <td>${p.gender}</td>
+      <td>${p.dept}</td>
+      <td>${p.los}d</td>
+      <td>${p.prev}</td>
+      <td>${p.diag}</td>
+      <td>${p.meds}</td>
+      <td style="color:${p.chf?'#e05c5c':'#8b949e'}">${yn(p.chf)}</td>
+      <td style="color:${p.copd?'#e05c5c':'#8b949e'}">${yn(p.copd)}</td>
+      <td style="color:${p.dm?'#f0a443':'#8b949e'}">${yn(p.dm)}</td>
+      <td>${p.ins}</td>
+      <td>${p.disc}</td>
+      <td style="color:${p.readmitted==='Yes'?'#e05c5c':'#3fb950'}">${p.readmitted}</td>
+      <td>${tierBadge(p.tier)}</td>
+    </tr>
+  `).join('');
+
+  const maxPage = Math.ceil(filtered.length / PAGE_SIZE);
+  document.getElementById('pageInfo').textContent = `Page ${page} of ${maxPage}`;
+  document.getElementById('totalInfo').textContent = `${filtered.length.toLocaleString()} records`;
+  document.getElementById('prevBtn').disabled = page === 1;
+  document.getElementById('nextBtn').disabled = page === maxPage;
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('tierFilter').addEventListener('change', applyFilters);
+document.getElementById('deptFilter').addEventListener('change', applyFilters);
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EDA — ReadmitIQ</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="../js/chart.umd.min.js"></script>
+<script src="../js/model_data.js"></script>
+<script src="../js/eda_data.js"></script>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="11" y="2" width="6" height="24" rx="2" fill="#e05c5c"/>
+        <rect x="2" y="11" width="24" height="6" rx="2" fill="#e05c5c"/>
+      </svg>
+    </div>
+    <div><div class="brand-name">ReadmitIQ</div><div class="brand-sub">Risk Intelligence</div></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="../index.html" class="nav-item"><span class="nav-icon">◎</span> Overview</a></li>
+    <li><a href="risk-scorer.html" class="nav-item"><span class="nav-icon">◈</span> Risk Scorer</a></li>
+    <li><a href="eda.html" class="nav-item active"><span class="nav-icon">◉</span> EDA</a></li>
+    <li><a href="model-insights.html" class="nav-item"><span class="nav-icon">◇</span> Model Insights</a></li>
+    <li><a href="model-comparison.html" class="nav-item"><span class="nav-icon">⊞</span> Model Comparison</a></li>
+    <li><a href="patient-data.html" class="nav-item"><span class="nav-icon">▦</span> Patient Data</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="model-badge">XGBoost + SMOTE</div>
+    <div class="sidebar-meta">AUC · <strong>0.9554</strong></div>
+  </div>
+</nav>
+<main class="main">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Exploratory Data Analysis</h1>
+      <p class="page-sub">Distribution analysis, readmission patterns, and cohort breakdown across 5,000 patients</p>
+    </div>
+  </header>
+  <section class="kpi-row" id="edaKpis"></section>
+  <div class="charts-grid" style="margin-bottom:20px;">
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Age Distribution</h2><span class="card-tag">Patient Cohort</span></div>
+      <div class="chart-wrap"><canvas id="ageDist"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Readmission Rate by Age Group</h2><span class="card-tag">% Readmitted</span></div>
+      <div class="chart-wrap"><canvas id="ageRead"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-grid" style="margin-bottom:20px;">
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Length of Stay Distribution</h2><span class="card-tag">Days</span></div>
+      <div class="chart-wrap"><canvas id="losDist"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Medications at Discharge</h2><span class="card-tag">Count Distribution</span></div>
+      <div class="chart-wrap"><canvas id="medsDist"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-grid" style="margin-bottom:20px;">
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Readmission Rate by Department</h2><span class="card-tag">% Readmitted</span></div>
+      <div class="chart-wrap"><canvas id="deptRead"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Readmission Rate by Insurance Type</h2><span class="card-tag">% Readmitted</span></div>
+      <div class="chart-wrap"><canvas id="insRead"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-grid" style="margin-bottom:20px;">
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Readmission Rate by Discharge Type</h2><span class="card-tag">Disposition</span></div>
+      <div class="chart-wrap"><canvas id="discRead"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Comorbidity Prevalence in Cohort</h2><span class="card-tag">% of Patients</span></div>
+      <div class="chart-wrap"><canvas id="comorb"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-grid" style="margin-bottom:20px;">
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Target Class Distribution</h2><span class="card-tag">Readmitted vs Not</span></div>
+      <div class="chart-wrap"><canvas id="targetSplit"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-header"><h2 class="card-title">Readmission Rate by Gender</h2><span class="card-tag">% Readmitted</span></div>
+      <div class="chart-wrap"><canvas id="genderRead"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h2 class="card-title">Key EDA Findings</h2><span class="card-tag">Analyst Summary</span></div>
+    <div id="findings" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:4px;"></div>
+  </div>
+</main>
+<script>
+const E = EDA_DATA;
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = '#2a3441';
+const C = { red:'#e05c5c', amber:'#f0a443', green:'#3fb950', blue:'#58a6ff', purple:'#a371f7' };
+const o = E.overall;
+document.getElementById('edaKpis').innerHTML = [
+  { label:'Total Patients', value:o.total.toLocaleString(), sub:'Synthetic cohort', cls:'kpi-blue' },
+  { label:'Readmission Rate', value:o.readmit_rate+'%', sub:'30-day window', cls:'kpi-red' },
+  { label:'Avg Age', value:o.avg_age+' yrs', sub:'Patient cohort', cls:'kpi-amber' },
+  { label:'Avg Length of Stay', value:o.avg_los+' days', sub:'Per admission', cls:'kpi-green' },
+].map(k=>`<div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls}">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+const bar=(id,labels,data,colors,opts={})=>new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:5,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:opts.h||false},ticks:opts.xT||{}},y:{grid:{color:'#2a3441'},ticks:opts.yT||{}}},indexAxis:opts.h?'y':'x',maintainAspectRatio:false}});
+bar('ageDist',Object.keys(E.age_dist),Object.values(E.age_dist),['#58a6ff','#6db8ff','#82caff','#97dcff','#acedff','#c1ffff','#d6ffff']);
+const arv=Object.values(E.age_read);
+bar('ageRead',Object.keys(E.age_read),arv,arv.map(v=>v>40?C.red:v>30?C.amber:C.green),{yT:{callback:v=>v+'%'}});
+bar('losDist',Object.keys(E.los_dist),Object.values(E.los_dist),['#a371f7','#b88af8','#cda3f9','#e2bcfa','#f7d5fb']);
+bar('medsDist',Object.keys(E.meds_dist),Object.values(E.meds_dist),['#3fb950','#5fcb6c','#7fdd88','#9fefa4']);
+bar('deptRead',E.dept_read.map(d=>d.department),E.dept_read.map(d=>d.rate),E.dept_read.map(d=>d.rate>40?C.red:d.rate>35?C.amber:C.blue),{h:true,xT:{callback:v=>v+'%'}});
+bar('insRead',E.ins_read.map(d=>d.insurance_type),E.ins_read.map(d=>d.rate),E.ins_read.map(d=>d.rate>38?C.red:d.rate>33?C.amber:C.blue),{yT:{callback:v=>v+'%'}});
+bar('discRead',E.disc_read.map(d=>d.discharge_disposition),E.disc_read.map(d=>d.rate),E.disc_read.map(d=>d.rate>45?C.red:d.rate>35?C.amber:C.green),{h:true,xT:{callback:v=>v+'%'}});
+bar('comorb',Object.keys(E.comorb),Object.values(E.comorb),[C.amber,C.blue,C.red,C.purple],{yT:{callback:v=>v+'%'}});
+new Chart(document.getElementById('targetSplit'),{type:'doughnut',data:{labels:['Not Readmitted','Readmitted'],datasets:[{data:[o.not_readmitted,o.readmitted],backgroundColor:[C.green,C.red],borderWidth:0,hoverOffset:8}]},options:{plugins:{legend:{position:'bottom',labels:{padding:18,boxWidth:12}}},cutout:'65%',maintainAspectRatio:false}});
+const gr=E.gender_read;
+new Chart(document.getElementById('genderRead'),{type:'bar',data:{labels:Object.keys(gr),datasets:[{data:Object.values(gr),backgroundColor:[C.purple,C.blue],borderRadius:8,borderSkipped:false,barThickness:60}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#2a3441'},ticks:{callback:v=>v+'%'},max:60}},maintainAspectRatio:false}});
+const maxDept=E.dept_read.reduce((a,b)=>a.rate>b.rate?a:b);
+const maxDisc=E.disc_read.reduce((a,b)=>a.rate>b.rate?a:b);
+const maxIns=E.ins_read.reduce((a,b)=>a.rate>b.rate?a:b);
+document.getElementById('findings').innerHTML=[
+  {icon:'🏥',title:'Highest-Risk Department',body:`<strong>${maxDept.department}</strong> has the highest readmission rate at <strong>${maxDept.rate}%</strong> among all departments.`},
+  {icon:'📋',title:'Discharge Risk',body:`Patients discharged <strong>${maxDisc.discharge_disposition}</strong> show the highest readmission rate at <strong>${maxDisc.rate}%</strong>, suggesting inadequate post-discharge support.`},
+  {icon:'💳',title:'Insurance & Access',body:`<strong>${maxIns.insurance_type}</strong> patients show the highest readmission rate (<strong>${maxIns.rate}%</strong>), pointing to healthcare access gaps.`},
+  {icon:'👴',title:'Age & Risk',body:`Older age groups (61+) show progressively higher readmission rates, consistent with increased comorbidity burden and reduced recovery.`},
+  {icon:'💊',title:'Medication Burden',body:`Patients on 16+ medications at discharge have elevated readmission risk — polypharmacy is a key intervention target.`},
+  {icon:'⚖️',title:'Class Imbalance',body:`Dataset has a <strong>${o.readmit_rate}%</strong> readmission rate — addressed with SMOTE before model training to prevent biased predictions.`},
+].map(f=>`<div style="padding:18px;background:#1c232e;border-radius:8px;border:1px solid #2a3441;"><div style="font-size:1.4rem;margin-bottom:8px;">${f.icon}</div><div style="font-size:0.78rem;color:#8b949e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">${f.title}</div><div style="font-size:0.84rem;line-height:1.7;color:#e6edf3;">${f.body}</div></div>`).join('');
+</script>
+</body>
+</html>
