@@ -1,23 +1,26 @@
-# 🏥 ReadmitIQ — Hospital Readmission Risk Scorecard
+# 🏥 ReadmitIQ - Hospital Readmission Risk Scorecard
 
-Hospitals often struggle to identify which patients are likely to be readmitted within 30 days of discharge — a costly, high-stakes problem tied to both patient outcomes and CMS reimbursement penalties. **ReadmitIQ** uses machine learning, explainable AI (SHAP), SQL analytics, and an interactive dashboard to estimate 30-day readmission risk and surface the clinical factors driving it, so care teams can prioritize follow-up for the patients who need it most.
+Hospitals often struggle to identify which patients are likely to be readmitted within 30 days of discharge - a costly, high-stakes problem tied to both patient outcomes and CMS reimbursement penalties. **ReadmitIQ** uses machine learning, explainable AI (SHAP), SQL analytics, and an interactive dashboard to estimate 30-day readmission risk and surface the clinical factors driving it, so care teams can prioritize follow-up for the patients who need it most.
 
 <p align="center">
   <img src="assets/screenshots/dashboard.png" width="90%" alt="Dashboard"/>
 </p>
 
 <p align="center">
+  <img src="assets/screenshots/eda.png" width="90%" alt="EDA"/>
+</p>
+
+<p align="center">
+  <img src="assets/screenshots/model-comparison.png" width="90%" alt="Model Comparison"/>
+</p>
+
+<p align="center">
+  <img src="assets/screenshots/model-insights.png" width="90%" alt="Model Insights"/>
+</p>
+
+<p align="center">
   <img src="assets/screenshots/risk-scorer.png" width="45%" alt="Risk Scorer"/>
-  <img src="assets/screenshots/eda.png" width="45%" alt="EDA"/>
-</p>
-
-<p align="center">
-  <img src="assets/screenshots/model-comparison.png" width="45%" alt="Model Comparison"/>
-  <img src="assets/screenshots/model-insights.png" width="45%" alt="Model Insights"/>
-</p>
-
-<p align="center">
-  <img src="assets/screenshots/patient-table.png" width="90%" alt="Patient Table"/>
+  <img src="assets/screenshots/patient-table.png" width="45%" alt="Patient Table"/>
 </p>
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://saranya22-git.github.io/ReadmitIQ---Hospital-Readmission-Risk-Scorecard/)
@@ -39,7 +42,7 @@ Hospitals often struggle to identify which patients are likely to be readmitted 
 - ✔ Predicts 30-day readmission risk for individual patients
 - ✔ Explains every prediction with SHAP feature attributions
 - ✔ Compares three ML algorithms head-to-head (Logistic Regression, Random Forest, XGBoost)
-- ✔ Interactive risk scorer — enter patient details, get a live score + clinical note
+- ✔ Interactive risk scorer - enter patient details, get a live score + clinical note
 - ✔ 12 SQL analytical queries for readmission patterns
 - ✔ Power BI integration guide
 - ✔ Synthetic 5,000-patient healthcare dataset with realistic clinical logic
@@ -55,7 +58,7 @@ Hospitals often struggle to identify which patients are likely to be readmitted 
 | Precision | 81.1%  |
 | Recall    | 84.8%  |
 
-## 🥇 Model Comparison — Why XGBoost?
+## 🥇 Model Comparison - Why XGBoost?
 
 | Model                | AUC-ROC | Accuracy | Precision | Recall | F1    |
 | --------------------- | ------- | -------- | --------- | ------ | ----- |
@@ -112,7 +115,7 @@ Website Dashboard (6-page static site)
 | `discharge_disposition` | Home / Home Health / SNF / Rehab / AMA |
 | `insurance_type` | Medicare / Medicaid / Private / Self-Pay |
 | `department` | Cardiology / General Medicine / Pulmonology / Orthopedics / Neurology |
-| `readmitted_30d` | **Target** — readmitted within 30 days (0/1) |
+| `readmitted_30d` | **Target** - readmitted within 30 days (0/1) |
 
 ## 🛠 Tech Stack
 
@@ -130,11 +133,11 @@ Website Dashboard (6-page static site)
 
 | Page                          | Description                                                     |
 | ----------------------------- | ----------------------------------------------------------------- |
-| `index.html`                  | Dashboard — KPIs, ROC curve, SHAP chart, confusion matrix         |
-| `pages/eda.html`              | EDA — 10 charts: age, LOS, meds, dept, insurance, comorbidities   |
+| `index.html`                  | Dashboard - KPIs, ROC curve, SHAP chart, confusion matrix         |
+| `pages/eda.html`              | EDA - 10 charts: age, LOS, meds, dept, insurance, comorbidities   |
 | `pages/risk-scorer.html`      | Live patient form → 30-day risk score + clinical note             |
 | `pages/model-insights.html`   | ML pipeline, performance metrics, SHAP explainability             |
-| `pages/model-comparison.html` | LR vs RF vs XGBoost — radar, ROC, metrics table                   |
+| `pages/model-comparison.html` | LR vs RF vs XGBoost - radar, ROC, metrics table                   |
 | `pages/patient-data.html`     | Searchable/filterable 5,000-patient cohort table                  |
 
 ## 📁 Folder Structure
@@ -189,7 +192,7 @@ open ../website/index.html   # Mac
 # or double-click index.html in File Explorer (Windows)
 ```
 
-**[🔗 Live Demo](https://saranya22-git.github.io/ReadmitIQ---Hospital-Readmission-Risk-Scorecard/)** *(enable GitHub Pages in repo Settings to activate this link — see note below)*
+**[🔗 Live Demo](https://saranya22-git.github.io/ReadmitIQ---Hospital-Readmission-Risk-Scorecard/)** *(enable GitHub Pages in repo Settings to activate this link - see note below)*
 
 ## 📈 Business Insights Generated (12 SQL Queries)
 
@@ -214,11 +217,8 @@ open ../website/index.html   # Mac
 - Cloud deployment (Render/Railway/Azure)
 - Integrate with real EHR data pipelines (FHIR standard)
 
-## 📄 License
-
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
 
 ## 👤 Author
 
-**Saranya Sammeta** | B.Tech CSE (AI & Data Science) | CGPA 9.15
+**Saranya Sammeta** | Artificial Intelligence & Data Science
 GitHub: [github.com/Saranya22-git](https://github.com/Saranya22-git) | LinkedIn: [linkedin.com/in/sammeta-saranya-5517a8311](https://linkedin.com/in/sammeta-saranya-5517a8311)
